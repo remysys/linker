@@ -1,0 +1,17 @@
+/*
+ * gcc target.c -lbfd
+ *
+ */
+#include <stdio.h>
+#include "bfd.h"
+
+int main()
+{
+  const char **t = bfd_target_list();
+  while (*t) {
+    printf("%s\n", *t);
+    t++;
+  }
+
+  return 0;
+}
