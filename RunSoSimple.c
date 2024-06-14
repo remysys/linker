@@ -2,7 +2,7 @@
 #include <dlfcn.h>
 
 // gcc -o RunSoSimple RunSoSimple.c -ldl
-// ./RunSoSimple /lib64/ld-linux-x86-64.so.2
+// ./RunSoSimple /lib64/libm.so.6
 int main(int argc, char **argv) {
   void *handle;
   double (*func)(double);
