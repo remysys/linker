@@ -1,6 +1,6 @@
 /* 
- * gcc proc_stack.c -m32 -o proc_stack
- * ./proc_stack 1 2 3 4
+ * gcc proc_stack.c -m32 -o proc_stack -g
+ * gdb --args ./proc_stack 1 2 3 4
  */
 
 #include <stdio.h>
