@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <dlfcn.h>
 
-// gcc -o RunSoSimple RunSoSimple.c -ldl
-// ./RunSoSimple /lib64/libm.so.6
+// gcc -o run_so_simple run_so_simple.c -ldl
+// ./run_so_simple /lib64/libm.so.6
 int main(int argc, char **argv) {
   void *handle;
   double (*func)(double);
