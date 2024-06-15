@@ -1,17 +1,31 @@
 #include <stdio.h>
 #include <dlfcn.h>
+int i;
+int esp = 0;
+void* handle;
+char* error;
+void* func;
+
+int iret = 0;
+double dret = 0.0;
+char *sret = 0;
+
+
+int (*func_int)();
+double (*func_double)();
+char* (*func_str)();
+void (*func_void)();
+
+
 
 #define SETUP_STACK     \
 i = 2;                  \
 while (++i < argc - 1)  \
 {                       \
-  printf("====i :%d argc :%d\n", i, argc);   \
   switch (argv[i][0])   \
   {                     \
   case 'i':             \
-    printf("before i === %d\n", i); \
     asm volatile("push %0" :: "r"(atoi(&argv[i][1])));  \
-    printf("after i === %d\n", i);\
     esp += 4;                                           \
     break;                                              \
   case 'd':                                             \
@@ -34,12 +48,7 @@ while (++i < argc - 1)  \
 
 int main(int argc, char* argv[])
 {
-  int i;
-  int esp = 0;
-  void* handle;
-  char* error;
-  void* func;
-
+  
   handle = dlopen(argv[1], RTLD_NOW);
   if (handle == NULL) {
     printf("can't find library %s\n", argv[1]);
@@ -60,30 +69,29 @@ int main(int argc, char* argv[])
   {
     case 'i':
       {
-        int (*func_int)() = func;
+        func_int = func;
         SETUP_STACK
-        int ret = func_int();
-        printf("===============2\n");
+        iret = func_int();
         RESTORE_STACK;
-        printf("int ret = %d\n", ret);
+        printf("int ret = %d\n", iret);
         break;
       }
     case 'd':
       {
-        double (*func_double)() = func;
+        func_double = func;
         SETUP_STACK;
-        double ret = func_double();
+        dret = func_double();
         RESTORE_STACK;
-        printf("double ret = %f\n", ret);
+        printf("double ret = %f\n", dret);
         break;
       }
     case 's':
       {
-        char* (*func_str)() = func;
+        func_str = func;
         SETUP_STACK;
-        char* ret = func_str();
+        sret = func_str();
         RESTORE_STACK;
-        printf("string ret = %s\n", ret);
+        printf("string ret = %s\n", sret);
         break;
       }
     case 'v':

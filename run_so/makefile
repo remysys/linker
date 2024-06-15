@@ -1,6 +1,7 @@
 # gcc -m32 -g -fPIC -shared -o lib.so lib.c
 # gcc -m32 -g -ldl runso.c -o runso
 # ./runso ./lib.so foobar i2 i
+# objdump -S runso > 1.txt
 
 CC = gcc
 

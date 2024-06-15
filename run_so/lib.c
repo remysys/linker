@@ -2,7 +2,6 @@
 
 int foobar(int i)
 {
-  // printf("=========-4\n");
-  // printf("x");
+  printf("x");
   return i;
 }
