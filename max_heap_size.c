@@ -1,3 +1,7 @@
+/*
+ * gcc -m32 -g max_heap_size.c -o max_heap_size32
+ * gcc -g max_heap_size.c -o max_heap_size64
+*/
 #include <stdio.h>
 #include <stdlib.h>
 
