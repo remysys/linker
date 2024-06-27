@@ -1,4 +1,4 @@
-// gcc ex3.c 
+// gcc ex5.c 
 // http://groups.di.unipi.it/~nids/docs/longjump_try_trow_catch.html
 
 // Duff's device
@@ -9,8 +9,8 @@
 
 #define TRY do { jmp_buf ex_buf__; switch(setjmp(ex_buf__)) { case 0: while(1) {
 #define CATCH(x) break; case x:
-#define FINALLY break; } default:
-#define ETRY }} while(0)
+#define FINALLY break; } default: {
+#define ETRY break; }}} while(0)
 #define THROW(x) longjmp(ex_buf__, x)
 
 #define FOO_EXCEPTION (1)
@@ -20,7 +20,7 @@
 int main(int argc, char** argv) {
   TRY {
     printf("in try block\n");
-    THROW(BAR_EXCEPTION);
+    THROW(BAZ_EXCEPTION);
     printf("i do not appear\n");
   } CATCH(FOO_EXCEPTION) {
     printf("got foo\n");
@@ -28,8 +28,6 @@ int main(int argc, char** argv) {
     printf("got bar\n");
   } CATCH(BAZ_EXCEPTION) {
     printf("got baz\n");
-  } FINALLY {
-    printf("...et in arcadia ego\n");
   }
   ETRY;
 
