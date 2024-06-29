@@ -10,7 +10,6 @@ _co_setjmp_asm:
    * rbx rsp rbp and r12-r15 are callee saved
    * the other registers have to be saved by
    * the caller anyways so we can just ignore them
-
    * save the registers
    * todo: we don't save the flags register here
    *       we could get it using pushf and then
@@ -39,7 +38,8 @@ _co_setjmp_asm:
    * 1) the return address to the original caller
    * 2) the stack base pushed by the compiler
    * 3) the return address to the wrapper function
-   * /
+   */
+  
   leaq 24(%rsp), %rdx
   movq %rdx, 104(%rax)
 
@@ -48,7 +48,7 @@ _co_setjmp_asm:
    * saving the important part of the stack since
    * it is likely to be overwritten by variables
    * after we return
-
+   */
   
   // save the return address to the wrapper function
   movq (%rsp), %rdx
@@ -74,9 +74,9 @@ _co_setjmp_asm:
 _co_longjmp_asm:
     
   /*
-    * buf will be in rax
-    * ret will be in rdx
-    */
+   * buf will be in rax
+   * ret will be in rdx
+   */
 
   // restore rsp
   movq 104(%rax), %rsp

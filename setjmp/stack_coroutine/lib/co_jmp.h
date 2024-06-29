@@ -19,8 +19,8 @@ typedef unsigned long long uint64_t;
 //      +96  | buf[12]: r15 |
 //      +104 | buf[13]:  *  | // save the address: rsp + 24
 //      +112 | buf[14]:  *  | // return address <-> in function co_setjmp + 4
-//      +120 | buf[15]:   * | // [rbp] <-> frame pointer of funciton which call co_setjmp
-//hig   +128 | buf[16]:   * | // return address <-> next instruction of call co_setjmp, eg. pursue_task + 1
+//      +120 | buf[15]:  *  | // [rbp] <-> frame pointer of funciton which call co_setjmp
+//hig   +128 | buf[16]:  *  | // return address <-> next instruction of call co_setjmp, eg. pursue_task + 1
 
 
 typedef uint64_t co_jmp_buf[17];
