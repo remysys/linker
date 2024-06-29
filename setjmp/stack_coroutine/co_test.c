@@ -3,8 +3,11 @@
 #include "lib/co_routine.h"
 
 void my_async_func() {
+  int a = 10;
+  int b = 10;
   puts("Func1: 1");
   yield;
+  printf("a+b = %d\n", a+b);
   puts("Func1: 2");
   dump;
 }

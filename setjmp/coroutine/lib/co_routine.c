@@ -5,18 +5,11 @@
 
 task_t *cur_task = 0;
 
-task_t *get_last(task_t *first) {
-  task_t *curr = first;
-  while (curr->next != first) {
-      curr = curr->next;
-  }
-  return curr;
-}
 
 // take control of the stack pointer
 // register void *stack_pointer asm ("rsp");
 
-int pursue_task() {
+int schedule_task() {
    // save scheduler state
   int ret = setjmp(cur_task->ctx_env);
   if (0 == ret) {
@@ -61,7 +54,7 @@ void add_task(ctx_t *ctx, task_t *buf,  void *stack_bottom, size_t stack_size, v
 void start(ctx_t *ctx) {
   cur_task = *ctx;
   while (1) {
-    if (pursue_task() > 1) {
+    if (schedule_task() > 1) {
       // are we in the last task?
       if (cur_task->next == cur_task)
           break;
