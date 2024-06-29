@@ -4,7 +4,8 @@ int co_setjmp(uint64_t *buf) {
   int ret = 0;
   __asm__ volatile("movq %0, %%rax" : : "r" (buf));
   __asm__ volatile("call _co_setjmp_asm");
-  __asm__ volatile("movq %%rdx, %0" : : "m" (ret));
+
+  __asm__ volatile("movl %%edx, %0" : : "m" (ret));
   return ret;
 }
 

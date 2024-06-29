@@ -1,6 +1,6 @@
 CC = gcc
 AS = as
-CFLAGS = -std=c11
+CFLAGS = -std=c11 -g
 
 all: co_test
 
