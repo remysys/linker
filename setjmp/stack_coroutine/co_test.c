@@ -26,7 +26,7 @@ int main() {
   add_task(&ctx, &t2, malloc(4096), 4096, my_async_func2);
   
   start(&ctx);
-  free(t1.stack_top - 4096);
-  free(t2.stack_top - 4096);
+  free((char *)t1.stack_top - 4096);
+  free((char *)t2.stack_top - 4096);
   return 0;
 }

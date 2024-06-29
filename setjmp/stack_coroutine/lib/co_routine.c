@@ -5,9 +5,6 @@
 
 task_t *cur_task = 0;
 
-// take control of the stack pointer
-void *stack_pointer;
-
 int schedule_task() {
    // save scheduler state
   int ret = co_setjmp(cur_task->ctx_env);
@@ -15,8 +12,8 @@ int schedule_task() {
   if (0 == ret) {
     if (!cur_task->called) {
       cur_task->called = 1;
-      // set stack pointer to task's stack
-      stack_pointer = cur_task->stack_top;
+      // set stack pointer to task's stack eg. switch stack
+      stack_pointer = (uint64_t)cur_task->stack_top;
       // call task
       cur_task->call();
     } else {
@@ -34,7 +31,7 @@ void add_task(ctx_t *ctx, task_t *buf,  void *stack_bottom, size_t stack_size, v
   
   // calculate the stack top
   
-  buf->stack_top = (void *) ((char *)stack_bottom + stack_size);
+  buf->stack_top = (uint64_t *) ((char *)stack_bottom + stack_size);
   
   // ctx acts as a pointer to the first task in our list
   if (!*ctx) {
