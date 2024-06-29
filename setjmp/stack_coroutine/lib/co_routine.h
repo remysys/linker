@@ -20,7 +20,7 @@ typedef task_t *ctx_t;
 void add_task(ctx_t *ctx, task_t *buf,  void *stack_bottom, size_t stack_size, void(*call)());
 
 // runs all the task asynchronously
-void start(ctx_t *ctx);
+void schedule_task(ctx_t *ctx);
 
 extern task_t *cur_task;
 

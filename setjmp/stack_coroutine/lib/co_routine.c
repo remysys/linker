@@ -5,26 +5,6 @@
 
 task_t *cur_task = 0;
 
-int schedule_task() {
-   // save scheduler state
-  int ret = co_setjmp(cur_task->ctx_env);
-  
-  if (0 == ret) {
-    if (!cur_task->called) {
-      cur_task->called = 1;
-      // set stack pointer to task's stack eg. switch stack
-      stack_pointer = (uint64_t)cur_task->stack_top;
-      // call task
-      cur_task->call();
-    } else {
-      // restore previous task state
-      co_longjmp(cur_task->func_env, 1);
-    }
-  }
-
-  return ret;
-}
-
 void add_task(ctx_t *ctx, task_t *buf,  void *stack_bottom, size_t stack_size, void(*call)()) {
   // save the function pointer for when we start the task
   buf->call = call;
@@ -49,11 +29,26 @@ void add_task(ctx_t *ctx, task_t *buf,  void *stack_bottom, size_t stack_size, v
   }
 }
 
-void start(ctx_t *ctx) {
+void schedule_task(ctx_t *ctx) {
   cur_task = *ctx;
   while (1) {
+    // save scheduler state
+    int ret = co_setjmp(cur_task->ctx_env);
+
+    if (0 == ret) {
+      if (!cur_task->called) {
+        cur_task->called = 1;
+        // set stack pointer to task's stack eg. switch stack
+        stack_pointer = (uint64_t)cur_task->stack_top;
+        // call task
+        cur_task->call();
+      } else {
+        // restore previous task state
+        co_longjmp(cur_task->func_env, 1);
+      }
+    }
     
-    if (schedule_task() > 1) {
+    if (ret > 1) { // dump
       // are we in the last task?
       if (cur_task->next == cur_task)
           break;
