@@ -1,8 +1,9 @@
-/* ---------------------------------------------------------------- */
-/* PROGRAM  pingpong :                                              */
-/* This program uses setjmp() and longjmp() to implement an      */
-/* example of coroutine.                                            */
-/* ---------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+/* https://www.csl.mtu.edu/cs4411.ck/www/NOTES/non-local-goto/coroutine.html */
+/* PROGRAM  pingpong :                                                       */
+/* This program uses setjmp() and longjmp() to implement an                  */
+/* example of coroutine.                                                     */
+/* ------------------------------------------------------------------------- */
 
 #include <stdio.h>
 #include <stdlib.h>
