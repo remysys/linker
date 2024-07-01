@@ -21,4 +21,4 @@ test:
 	time ./perf 2 && \
 	time ./perf 3
 clean:
-	rm -f syscall int80 syscall.o int80.o perf
+	rm -f syscall int80 syscall.o int80.o perf linux.vdso

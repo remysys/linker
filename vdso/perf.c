@@ -1,4 +1,4 @@
-/* time consume: emulated vsyscall > native syscall > vDSO syscall 
+/* time consume: emulated vsyscall > normal syscall > vDSO syscall 
  * vsys_call
  * 
  * vdso:
@@ -26,6 +26,12 @@
     .balign 4096, 0xcc
 
     .size __vsyscall_page, 4096
+
+ * cat /usr/src/linux-headers-$(uname -r)/.config | grep VSYSCALL
+ * apt update
+ * uname -r
+ * apt install linux-headers-6.1.0-18-amd64
+ * https://solariar.net/notes/syscall.html#x86%E6%9E%B6%E6%9E%84%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E5%AE%9E%E7%8E%B0%E6%A6%82%E8%BF%B0
  */
 
 #include <stdio.h>
@@ -55,7 +61,7 @@ int main(int argc, char **argv) {
     for (i = 0; i < 1000000;++i)
       time(NULL);
   } else {
-    for (i = 0; i < 1000000; ++i) /* native syscall */
+    for (i = 0; i < 1000000; ++i) /* syscall */
       syscall(SYS_time, NULL);
   }
 
