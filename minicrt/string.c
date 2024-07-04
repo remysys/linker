@@ -39,9 +39,11 @@ int strcmp(const char *src, const char *dest) {
 }
 
 
-void strcpy(char *src, char *dest) {
-  while (*src++ = *dest++)
-    ;
+char *strcpy(char *dest, const char *src) {
+
+  char *ret = dest;
+  while (*dest++ = *src++);
+  return ret;
 }
 
 

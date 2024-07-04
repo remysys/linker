@@ -32,15 +32,23 @@ int fseek(FILE *fp, int offset, int set);
 // string
 void itoa(int n, char *s);
 int strcmp(const char *src, const char *dest);
-void strcpy(char *src, char *dest);
+char *strcpy(char *dest, const char *src);
 unsigned int strlen(const char *str);
-
 
 // printf
 int fputc(int c, FILE *stream);
 int fputs(const char* str, FILE *stream);
 int printf(const char *format, ...);
 int fprintf(FILE *stream, const char *format, ...);
+
+// atexit
+typedef void (*cxa_func_t)(void *);
+typedef void (*atexit_func_t)(void);
+int __cxa_atexit(cxa_func_t func, void *arg, void *);
+int atexit(atexit_func_t func);
+void do_global_ctors();
+void mini_crt_call_exit_routine();
+
 
 #ifdef __cplusplus
 }

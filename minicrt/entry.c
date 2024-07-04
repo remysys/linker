@@ -30,12 +30,14 @@ void mini_crt_entry(void) {
     crt_fatal_error("io initalize failed");
   }
 
+  do_global_ctors();
+
   ret  = main(argc, argv);
   exit(ret);
 }
 
 void exit(int code) {
-  //mini_crt_call_exit_routine();
+  mini_crt_call_exit_routine();
 
   asm("movl %0,%%ebx   \n\t" 
       "movl $1,%%eax   \n\t"

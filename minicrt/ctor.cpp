@@ -1,4 +1,4 @@
-// ctors.cpp
+// ctor.cpp
 typedef void (*init_func)(void);
 
 void run_hooks();
