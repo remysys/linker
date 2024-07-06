@@ -2,19 +2,16 @@
 #include "cstring.h"
 
 using namespace std;
-
-
-string s("global string");
+string global_str("global string");
 
 int main(int argc, char* argv[]) {
-  /*
   int i;
   FILE* fp;
-  char **v = malloc(argc * sizeof(char *));
+  char **v = (char **)malloc(argc * sizeof(char *));
   
   
   for(i = 0; i < argc; ++i) {
-    v[i] = malloc(strlen(argv[i]) + 1);
+    v[i] = (char *)malloc(strlen(argv[i]) + 1);
     strcpy(v[i], argv[i]);
   }
 
@@ -33,7 +30,7 @@ int main(int argc, char* argv[]) {
     int len;
     char* buf;
     fread(&len, 1, sizeof(int), fp);
-    buf = malloc(len + 1);
+    buf = (char *)malloc(len + 1);
     fread(buf, 1, len, fp);
     buf[len] = '\0';
     printf("%d %s\n", len, buf);
@@ -42,11 +39,7 @@ int main(int argc, char* argv[]) {
   }
 
   fclose(fp);
-  */
-  string* msg = new string("hello world");
-  cout << *msg << endl;
-  delete msg;
 
-  cout << s << endl;
+  cout << global_str << endl;
   return 0;
 }

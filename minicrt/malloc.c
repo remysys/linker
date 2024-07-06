@@ -12,17 +12,17 @@ typedef struct _heap_header {
   } type;
 
   unsigned int size;
-  struct  _heap_header* next;
-  struct  _heap_header* prev; 
+  struct  _heap_header *next;
+  struct  _heap_header *prev; 
 } heap_header;
 
-#define ADDR_ADD(a,o) (((char*)(a)) + o)
+#define ADDR_ADD(a,o) (((char *)(a)) + o)
 #define HEADER_SIZE  (sizeof(heap_header))
 
-static heap_header* list_head  = NULL;
+static heap_header *list_head  = NULL;
 
-void free(void* ptr) {
-  heap_header* header  = (heap_header*)ADDR_ADD(ptr, -HEADER_SIZE);
+void free(void *ptr) {
+  heap_header *header  = (heap_header *)ADDR_ADD(ptr, -HEADER_SIZE);
   if (header->type != HEAP_BLOCK_USED) {
     return ;
   }
@@ -45,7 +45,7 @@ void free(void* ptr) {
   }
 }
 
-void* malloc(unsigned int size) {
+void *malloc(unsigned int size) {
   heap_header *header;
   if (size == 0) {
     return NULL;
@@ -65,7 +65,7 @@ void* malloc(unsigned int size) {
 
     if (header->size > size + HEADER_SIZE*2) {
       // split
-      heap_header* next = (heap_header*)ADDR_ADD(header, size + HEADER_SIZE);
+      heap_header *next = (heap_header*)ADDR_ADD(header, size + HEADER_SIZE);
       next->prev  = header;
       next->next  = header->next;
       next->type  = HEAP_BLOCK_FREE;
@@ -117,7 +117,7 @@ int mini_crt_init_heap() {
     return -1;
   }
 
-  header = (heap_header*)base;
+  header = (heap_header *)base;
 
   header->size = heap_size;
   header->type = HEAP_BLOCK_FREE;

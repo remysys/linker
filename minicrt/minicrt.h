@@ -8,7 +8,7 @@ extern "C" {
 // malloc
 #define NULL (0)
 
-void free(void* ptr);
+void free(void *ptr);
 void *malloc(unsigned int size);
 static void *brk(void *addr);
 int mini_crt_init_heap();
@@ -17,9 +17,9 @@ int mini_crt_init_heap();
 typedef int FILE;
 #define EOF	(-1)
 
-#define stdin	  ((FILE*)0)
-#define stdout	((FILE*)1)
-#define stderr	((FILE*)2)
+#define stdin	  ((FILE *)0)
+#define stdout	((FILE *)1)
+#define stderr	((FILE *)2)
 
 int mini_crt_init_io();
 
@@ -37,7 +37,7 @@ unsigned int strlen(const char *str);
 
 // printf
 int fputc(int c, FILE *stream);
-int fputs(const char* str, FILE *stream);
+int fputs(const char *str, FILE *stream);
 int printf(const char *format, ...);
 int fprintf(FILE *stream, const char *format, ...);
 

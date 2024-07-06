@@ -2,15 +2,15 @@
 
 typedef struct _func_node {
   atexit_func_t func;
-  void* arg;
+  void *arg;
   int is_cxa;
-  struct _func_node* next;
+  struct _func_node *next;
 } func_node;
 
-static func_node* atexit_list = 0;
+static func_node *atexit_list = 0;
 
 int register_atexit(atexit_func_t func, void *arg, int is_cxa) {
-    func_node* node;
+    func_node *node;
     if (!func) return -1;
 
     node = (func_node *)malloc(sizeof(func_node));
