@@ -10,7 +10,7 @@ namespace std {
     *this = s;
   }
 
-  string::~string() {
+  string::~string() {    
     if (buf != 0) {
       delete [] buf;
       buf = 0;

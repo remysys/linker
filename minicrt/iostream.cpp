@@ -60,7 +60,7 @@ namespace std {
   }
 
   void ofstream::close() {
-    if (fp) {
+    if (fp > stderr) { // not close 0 1 2 
       fclose(fp);
       fp = 0;
     }

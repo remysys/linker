@@ -20,7 +20,7 @@ int fputs(const char *str, FILE *stream) {
 #define va_list char *
 #define va_start(ap, arg) (ap = (va_list)&arg + sizeof(arg))
 #define va_arg(ap, t)  (*(t*)((ap += sizeof(t)) - sizeof(t)))
-#define va_end(ap) (ap=(va_list)0)
+#define va_end(ap) (ap = (va_list)0)
 
 static int vfprintf(FILE *stream, const char *format, va_list ap) {
   int ret = 0;
@@ -40,7 +40,11 @@ static int vfprintf(FILE *stream, const char *format, va_list ap) {
           ret += fputs(va_arg(ap, char *), stream);
           break;
         case 'd':
-          itoa(va_arg(ap, int), buf);
+          itoa(va_arg(ap, int), buf, 10);
+          ret += fputs(buf, stream);
+          break;
+        case 'x':
+          itoa(va_arg(ap, int), buf, 16);
           ret += fputs(buf, stream);
           break;
         default:

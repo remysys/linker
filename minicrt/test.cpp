@@ -2,13 +2,16 @@
 #include "cstring.h"
 
 using namespace std;
+
 string global_str("global string");
 
 int main(int argc, char* argv[]) {
+
+  // test malloc and stdio
+  
   int i;
   FILE* fp;
   char **v = (char **)malloc(argc * sizeof(char *));
-  
   
   for(i = 0; i < argc; ++i) {
     v[i] = (char *)malloc(strlen(argv[i]) + 1);
@@ -24,7 +27,6 @@ int main(int argc, char* argv[]) {
   }
   fclose(fp);
 
-  
   fp = fopen("test.txt", "r");
   for(i = 0; i < argc; ++i) {
     int len;
@@ -39,7 +41,16 @@ int main(int argc, char* argv[]) {
   }
 
   fclose(fp);
+  
+  // test printf 
+  int num = 15;
+  const char *str = "world";
+  printf("num = %d num = 0x%x\n", num, num);
+  printf("hello %s\n", str);
 
+  // test global object construct and destruct
   cout << global_str << endl;
+  
+
   return 0;
 }

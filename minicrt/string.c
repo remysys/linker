@@ -10,16 +10,18 @@ void reverse(char s[]) {
   }
 }
 
-void itoa(int n, char *s) {
+void itoa(int n, char *s, int base) {
+  char alphabet[] = "0123456789abcdef";
   int i, sign;
   if ((sign = n) < 0) { /* record sign */
     n = -n;             /* make n positive */
   }
-    
+
+                                  /* base = 10 or 16 */ 
   i = 0;
-  do {                       /* generate digits in reverse order */
-    s[i++] = n % 10 + '0'; /* get next digit */
-  } while ((n /= 10) > 0);   /* delete it */
+  do {                            /* generate digits in reverse order */
+    s[i++] = alphabet[n % base];  /* get next digit */
+  } while ((n /= base) > 0);        /* delete it */
   
   if (sign < 0) {
     s[i++] = '-';
