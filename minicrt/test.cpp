@@ -51,6 +51,5 @@ int main(int argc, char* argv[]) {
   // test global object construct and destruct
   cout << global_str << endl;
   
-
   return 0;
 }

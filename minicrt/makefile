@@ -14,7 +14,7 @@
 CC = gcc
 CXX = g++
 CFLAGS = -c -m32 -g -fno-builtin -nostdlib -fno-stack-protector
-CXXFLAGS = -c -m32 -g -nostdinc++ -fno-rtti -fno-exceptions -fno-builtin -nostdlib -fno-stack-protector
+CXXFLAGS = -c -m32 -g -nostdinc++ -fno-builtin -nostdlib -fno-stack-protector
 LDFLAGS = -m elf_i386 -static -e mini_crt_entry
 
 COBJS = entry.o malloc.o printf.o stdio.o string.o atexit.o 
