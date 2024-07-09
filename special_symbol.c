@@ -1,4 +1,4 @@
-
+/*
 #include <stdio.h>
 
 extern char __executable_start[];
@@ -13,4 +13,24 @@ int main() {
   printf("Executable End %p %p\n", end, _end);
 
   return 0;
+} */
+
+
+// https://stackoverflow.com/questions/1765969/where-are-the-symbols-etext-edata-and-end-defined
+
+// this is a code from Linux man page:
+#include <stdio.h>
+#include <stdlib.h>
+
+extern char etext, edata, end;
+extern char __executable_start;
+
+int main() {
+  printf("First address past:\n");
+  printf("    executable start          %10p\n", &__executable_start);
+  printf("    program text (etext)      %10p\n", &etext);
+  printf("    initialized data (edata)  %10p\n", &edata);
+  printf("    uninitialized data (end)  %10p\n", &end);
+
+  exit(EXIT_SUCCESS);
 }
