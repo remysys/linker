@@ -2,6 +2,7 @@
 // gcc -static -o prog2c main2.o ./libvector.a
 // gcc -static -o prog2c main2.o -L. -lvector
 // error: gcc -static ./libvector.a main2.c
+// gcc -o prog2l main2.c ./libvector.so
 #include <stdio.h>
 #include "vector.h"
 
