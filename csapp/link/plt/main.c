@@ -21,6 +21,10 @@ int main() {
   addvec(x, y, z, 2);
   printf("z = [%d %d]\n", z[0], z[1]);
 
+  multvec(x, y, z, 2);
+  printf("z = [%d %d]\n", z[0], z[1]);
+
+  printf("addcnt = %d multcnt = %d\n", addcnt, multcnt);
   printf("addcnt = %d\n", addcnt);
   return 0;
 }
