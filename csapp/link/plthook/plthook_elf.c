@@ -16,18 +16,37 @@
 #define R_JUMP_SLOT   R_X86_64_JUMP_SLOT
 #define R_GLOBAL_DATA R_X86_64_GLOB_DAT
 
-#ifdef USE_REL
-#define Elf_Plt_Rel   Elf_Rel
-#define PLT_DT_REL    DT_REL
-#define PLT_DT_RELSZ  DT_RELSZ
-#define PLT_DT_RELENT DT_RELENT
-#else
+
 #define Elf_Plt_Rel   Elf_Rela
 #define PLT_DT_REL    DT_RELA
 #define PLT_DT_RELSZ  DT_RELASZ
 #define PLT_DT_RELENT DT_RELAENT
+
+#ifndef ELF_CLASS
+#define ELF_CLASS     ELFCLASS64
 #endif
 
+#define SIZE_T_FMT "lu"
+#define ELF_WORD_FMT "u"
+#define ELF_XWORD_FMT "lu"
+#define ELF_SXWORD_FMT "ld"
+
+#define Elf_Half Elf64_Half
+#define Elf_Xword Elf64_Xword
+#define Elf_Sxword Elf64_Sxword
+#define Elf_Ehdr Elf64_Ehdr
+#define Elf_Phdr Elf64_Phdr
+#define Elf_Sym  Elf64_Sym
+#define Elf_Dyn  Elf64_Dyn
+#define Elf_Rel  Elf64_Rel
+#define Elf_Rela Elf64_Rela
+
+#ifndef ELF_R_SYM
+#define ELF_R_SYM ELF64_R_SYM
+#endif
+#ifndef ELF_R_TYPE
+#define ELF_R_TYPE ELF64_R_TYPE
+#endif
 
 struct plthook {
   const Elf_Sym *dynsym;
@@ -53,13 +72,12 @@ static int plthook_open_real(plthook_t **plthook_out, struct link_map *lmap);
 static void set_errmsg(const char *fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
 
 
-
 int plthook_open(plthook_t **plthook_out, const char *filename) {
   *plthook_out = NULL;
   if (filename == NULL) {
-      return plthook_open_executable(plthook_out);
+    return plthook_open_executable(plthook_out);
   } else {
-      return plthook_open_shared_library(plthook_out, filename);
+    return plthook_open_shared_library(plthook_out, filename);
   }
 }
 
@@ -84,8 +102,8 @@ int plthook_open_by_address(plthook_t **plthook_out, void *address) {
 
   *plthook_out = NULL;
   if (dladdr1(address, &info, (void**)&lmap, RTLD_DL_LINKMAP) == 0) {
-      set_errmsg("dladdr error");
-      return PLTHOOK_FILE_NOT_FOUND;
+    set_errmsg("dladdr error");
+    return PLTHOOK_FILE_NOT_FOUND;
   }
   return plthook_open_real(plthook_out, lmap);
 }
@@ -138,15 +156,15 @@ static int get_memory_permission(void *address) {
     unsigned long start, end;
     int eol = (strchr(buf, '\n') != NULL);
     if (bol) {
-      /* The fgets reads from the beginning of a line. */
+      /* the fgets reads from the beginning of a line. */
       if (!eol) {
-        /* The next fgets reads from the middle of the same line. */
+        /* the next fgets reads from the middle of the same line. */
         bol = 0;
       }
     } else {
-      /* The fgets reads from the middle of a line. */
+      /* the fgets reads from the middle of a line. */
       if (eol) {
-        /* The next fgets reads from the beginning of a line. */
+        /* the next fgets reads from the beginning of a line. */
         bol = 1;
       }
       continue;
@@ -214,7 +232,7 @@ static int plthook_open_real(plthook_t **plthook_out, struct link_map *lmap) {
     }
     plthook.dynsym = (const Elf_Sym*)(dyn_addr_base + dyn->d_un.d_ptr);
 
-    /* Check sizeof(Elf_Sym) */
+    /* check sizeof(Elf_Sym) */
     dyn = find_dyn_by_tag(lmap->l_ld, DT_SYMENT);
     if (dyn == NULL) {
       set_errmsg("failed to find DT_SYMTAB");
@@ -250,8 +268,8 @@ static int plthook_open_real(plthook_t **plthook_out, struct link_map *lmap) {
       plthook.rela_plt = (const Elf_Plt_Rel *)(dyn_addr_base + dyn->d_un.d_ptr);
       dyn = find_dyn_by_tag(lmap->l_ld, DT_PLTRELSZ);
       if (dyn == NULL) {
-          set_errmsg("failed to find DT_PLTRELSZ");
-          return PLTHOOK_INTERNAL_ERROR;
+        set_errmsg("failed to find DT_PLTRELSZ");
+        return PLTHOOK_INTERNAL_ERROR;
       }
       plthook.rela_plt_cnt = dyn->d_un.d_val / sizeof(Elf_Plt_Rel);
     }
