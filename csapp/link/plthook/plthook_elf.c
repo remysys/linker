@@ -22,9 +22,6 @@
 #define PLT_DT_RELSZ  DT_RELASZ
 #define PLT_DT_RELENT DT_RELAENT
 
-#ifndef ELF_CLASS
-#define ELF_CLASS     ELFCLASS64
-#endif
 
 #define SIZE_T_FMT "lu"
 #define ELF_WORD_FMT "u"
@@ -41,12 +38,8 @@
 #define Elf_Rel  Elf64_Rel
 #define Elf_Rela Elf64_Rela
 
-#ifndef ELF_R_SYM
 #define ELF_R_SYM ELF64_R_SYM
-#endif
-#ifndef ELF_R_TYPE
 #define ELF_R_TYPE ELF64_R_TYPE
-#endif
 
 struct plthook {
   const Elf_Sym *dynsym;

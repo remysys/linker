@@ -1,9 +1,7 @@
 UNAME_S := $(shell uname -s)
 
 CFLAGS_SHARED = -shared -fPIC
-CFLAGS = $(CFLAGS_WARNING) $(EXTRA_CFLAGS) $(OPT_CFLAGS)
-CFLAGS_WARNING = -Wall
-EXEEXT =
+CFLAGS = -Wall $(EXTRA_CFLAGS)
 LIBS = -ldl -lm
 PLTHOOK_C = plthook_elf.c
 TESTS = run_tests
@@ -13,11 +11,10 @@ ifeq ($(UNAME_S),Linux)
   TESTS = relro_pie_tests
 endif
 
-
 all: libtest.so testprog
 
 libtest.so: libtest.c libtest.h
-	$(CC) $(CFLAGS_SHARED) $(CFLAGS) -DLIBTEST_DLL -o libtest.so libtest.c -lm
+	$(CC) $(CFLAGS_SHARED) $(CFLAGS) -o libtest.so libtest.c -lm
 
 testprog: testprog.c ../$(PLTHOOK_C) libtest.h
 	$(CC) $(CFLAGS_EXE) $(CFLAGS) -o testprog -I.. testprog.c ../$(PLTHOOK_C) -L. -ltest $(LIBS)
