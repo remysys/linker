@@ -35,6 +35,22 @@ void test_show_bytes(int val) {
   show_pointer(pval);
 }
 
+void simple_show_a() {
+  int val = 0x87654321;
+  byte_pointer valp = (byte_pointer) &val;
+  show_bytes(valp, 1); /* A. */
+  show_bytes(valp, 2); /* B. */
+  show_bytes(valp, 3); /* C. */
+}
+
+void simple_show_b() {
+  int val = 0x12345678;
+  byte_pointer valp = (byte_pointer) &val;
+  show_bytes(valp, 1); /* A. */
+  show_bytes(valp, 2); /* B. */
+  show_bytes(valp, 3); /* C. */
+}
+
 
 int main(int argc, char *argv[]) {
   int val = 12345;
@@ -43,6 +59,11 @@ int main(int argc, char *argv[]) {
     val = strtol(argv[1], NULL, 0);
     printf("calling test_show_bytes\n");
     test_show_bytes(val);
+  } else {
+    printf("Calling simple_show_a\n");
+    simple_show_a();
+    printf("Calling simple_show_b\n");
+    simple_show_b();
   }
   return 0;
 }
