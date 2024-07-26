@@ -9,7 +9,7 @@ typedef unsigned char *byte_pointer;
 void show_bytes(byte_pointer start, size_t len) {
   size_t i;
   for (i = 0; i < len; i++)
-    printf(" %.2x", start[i]);
+    printf(" 0x%.2x", start[i]);
   printf("\n");
 }
 
@@ -24,7 +24,6 @@ void show_float(float x) {
 void show_pointer(void *x) {
   show_bytes((byte_pointer) &x, sizeof(void *));
 }
-
 
 void test_show_bytes(int val) {
   int ival = val;
@@ -52,6 +51,33 @@ void simple_show_b() {
 }
 
 
+void string_ueg() {
+  const char *s = "ABCDEF";
+  show_bytes((byte_pointer) s, strlen(s)); 
+}
+
+void string_leg() {
+  const char *s = "abcdef";
+  show_bytes((byte_pointer) s, strlen(s)); 
+}
+
+void inplace_swap(int *x, int *y) {
+  printf("x = %d y = %d\n", *x, *y);
+  *y = *x ^ *y; 
+  *x = *x ^ *y; 
+  *y = *x ^ *y;
+  printf("x = %d y = %d\n", *x, *y);
+}
+
+void show_shift() {
+  int lval = 0xFEDCBA98 << 32;
+  int aval = 0xFEDCBA98 >> 36;
+  unsigned uval = 0xFEDCBA98u >> 40;
+
+  printf("lval: 0x%x aval: 0x%x uval: 0x%x\n", lval, aval, uval);
+}
+
+
 int main(int argc, char *argv[]) {
   int val = 12345;
 
@@ -64,6 +90,15 @@ int main(int argc, char *argv[]) {
     simple_show_a();
     printf("Calling simple_show_b\n");
     simple_show_b();
+    printf("Calling string_ueg\n");
+    string_ueg();
+    printf("Calling string_leg\n");
+    string_leg();
+    int a = 10;
+    int b = 20;
+    inplace_swap(&a, &b);
+    inplace_swap(&a, &a);
+    show_shift();
   }
   return 0;
 }
