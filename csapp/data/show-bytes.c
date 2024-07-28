@@ -77,6 +77,31 @@ void show_shift() {
   printf("lval: 0x%x aval: 0x%x uval: 0x%x\n", lval, aval, uval);
 }
 
+void show_twocomp() {
+  short x = 12345; 
+  short mx = -x; 
+  
+  show_bytes((byte_pointer) &x, sizeof(short)); 
+  show_bytes((byte_pointer) &mx, sizeof(short)); 
+}
+
+
+void show_example() {
+  short sx = -12345;  /* -12345 */
+  unsigned uy = sx;   /* mystery! */
+
+  printf("uy = %u:\t", uy);
+  show_bytes((byte_pointer) &uy, sizeof(unsigned));
+
+  int z = 53191;
+  short sz = (short) z; /* -12345 */
+  int y = sz; /* -12345 */
+
+  printf("sz = %d y = %d\n", sz, y);
+  show_bytes((byte_pointer) &z, sizeof(int));
+  show_bytes((byte_pointer) &sz, sizeof(short));
+  show_bytes((byte_pointer) &y, sizeof(int));
+}
 
 int main(int argc, char *argv[]) {
   int val = 12345;
@@ -99,6 +124,9 @@ int main(int argc, char *argv[]) {
     inplace_swap(&a, &b);
     inplace_swap(&a, &a);
     show_shift();
+    printf("calling show_twocomp\n");
+    show_twocomp();
+    show_example();
   }
   return 0;
 }
