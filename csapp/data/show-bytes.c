@@ -85,7 +85,6 @@ void show_twocomp() {
   show_bytes((byte_pointer) &mx, sizeof(short)); 
 }
 
-
 void show_example() {
   short sx = -12345;  /* -12345 */
   unsigned uy = sx;   /* mystery! */
@@ -101,6 +100,20 @@ void show_example() {
   show_bytes((byte_pointer) &z, sizeof(int));
   show_bytes((byte_pointer) &sz, sizeof(short));
   show_bytes((byte_pointer) &y, sizeof(int));
+}
+
+void show_div() {
+  int x = -12340;
+  int y = 256;
+  printf("x/y = %d\n", x/y);
+
+  x = -1;
+  y = -2;
+
+  unsigned int ux = x;
+  unsigned int uy = y;
+
+  printf("x+y == ux+uy: %d\n", x+y == ux+uy);
 }
 
 int main(int argc, char *argv[]) {
@@ -127,6 +140,7 @@ int main(int argc, char *argv[]) {
     printf("calling show_twocomp\n");
     show_twocomp();
     show_example();
+    show_div();
   }
   return 0;
 }
