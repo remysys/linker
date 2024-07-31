@@ -116,6 +116,15 @@ void show_div() {
   printf("x+y == ux+uy: %d\n", x+y == ux+uy);
 }
 
+void show_test() {
+  int x = 2147483647;
+  float f = (float) x;
+  printf("f: %f\n", f);
+  show_int(x);
+  show_float(f);
+  printf("x == (int)(float) x: %d\n", x == (int)(float) x);
+}
+
 int main(int argc, char *argv[]) {
   int val = 12345;
 
@@ -141,6 +150,7 @@ int main(int argc, char *argv[]) {
     show_twocomp();
     show_example();
     show_div();
+    show_test();
   }
   return 0;
 }
