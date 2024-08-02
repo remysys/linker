@@ -79,7 +79,7 @@ unsigned replace_byte(unsigned x, int i, unsigned char b) {
 
 /* any bit of x equals 1 */
 int A(int x) {
-  return !(x ^ ~0);
+  return !~x;
 }
 
 int B(int x) {
@@ -126,6 +126,101 @@ int sra(int x, int k) {
   return xsrl | mask;
 }
 
+// 2.64
+/* return 1 when any odd bit of x equals 1; 0 otherwise. assume w=32 */
+int any_odd_one(unsigned x) {
+  unsigned mask = 0xAAAAAAAA;
+  return !!(x & mask);
+}
+
+// 2.65
+/* return 1 when x contains an odd number of 1s; 0 otherwise. assume w=32 */
+int odd_ones(unsigned x) {
+  x ^= x >> 16;
+  x ^= x >> 8;
+  x ^= x >> 4;
+  x ^= x >> 2;
+  x ^= x >> 1;
+  x &= 0x1;
+  return x;
+}
+
+// 2.66
+/*
+ * generate mask indicating leftmost 1 in x. assume w=32.
+ * for example, 0xFF00 -> 0x8000, and 0x6600 --> 0x4000.
+ * if x = 0, then return 0.
+ */
+int leftmost_one(unsigned x) {
+  /*
+   * first, generate a mask that all bits after leftmost one are one
+   * e.g. 0xFF00 -> 0xFFFF, and 0x6000 -> 0x7FFF
+   * if x = 0, get 0
+   */
+
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  /*
+   * then, do (mask >> 1) + (mask && 1), in which mask && 1 deals with case x = 0, 
+   * reserve leftmost bit one that's we want
+   */
+  return (x >> 1) + (x && 1);
+}
+
+// 2.67
+
+int int_size_is_32() {
+  int set_msb = 1 << 31;
+  int beyond_msb = set_msb << 1;
+
+  return set_msb && !beyond_msb;
+}
+
+int int_size_is_32_for_16bit() {
+  int set_msb = 1 << 15 << 15 << 1;
+  int beyond_msb = set_msb << 1;
+
+  return set_msb && !beyond_msb;
+}
+
+// 2.68
+
+int lower_one_mask(int n) {
+  int w = sizeof(int) << 3;
+  return ((unsigned int) -1) >> (w - n);
+}
+
+// 2.69
+
+/*
+* do rotating left shift. assume 0 <=n<w
+* examples when x = 0x12345678 and w = 32:
+* n=4 -> 0x23456781, n=20 -> 0x67812345
+*/
+
+unsigned rotate_left(unsigned x, int n) {
+  int w = sizeof(int) << 3;
+  /* pay attention when n == 0 */
+  return (x << n) | (x >> (w - n - 1) >> 1);
+}
+
+// 2.70 
+/*
+* return 1 when x can be represented as an n-bit, 2’s-complement
+* number; 0 otherwise
+* assume 1 <= n <= w
+*/
+
+int fits_bits(int x, int n) {
+  int w = sizeof(int) << 3;
+  int offset = w - n;
+  /* the point is x << (w-n) >> (w-n) must be equal to x itself */
+  return ((x << offset) >> offset) == x;
+}
+
 int main() {
   // 2.57
   test_show_bytes(12345);
@@ -162,7 +257,6 @@ int main() {
 
   // 2.62
   printf("int_shifts_are_arithmetic: %d\n", int_shifts_are_arithmetic());
-  return 0;
 
   // 2.63
   unsigned test_unsigned = 0x12345678;
@@ -170,4 +264,35 @@ int main() {
   assert(srl(test_unsigned, 4) == test_unsigned >> 4);
   assert(sra(test_int, 4) == test_int >> 4);
 
+  // 2.64
+  assert(any_odd_one(0x2) == 1);
+  assert(any_odd_one(0x4) == 0);
+
+  // 2.65
+  assert(odd_ones(0x2) == 1);
+  assert(odd_ones(0x6) == 0);
+
+  // 2.66
+
+  assert(leftmost_one(0xFF00) == 0x8000);
+  assert(leftmost_one(0x6000) == 0x4000);
+  assert(leftmost_one(0x0) == 0x0);
+
+  // 2.67
+  assert(int_size_is_32());
+  assert(int_size_is_32_for_16bit());
+
+  // 2.68
+  assert(lower_one_mask(6) == 0x3f);
+  assert(lower_one_mask(17) == 0x1FFFF);
+
+  // 2.69
+  assert(rotate_left(0x12345678, 4) == 0x23456781);
+  assert(rotate_left(0x12345678, 20) == 0x67812345);
+  assert(rotate_left(0x12345678, 0) == 0x12345678);
+  
+  // 2.70
+  assert(fits_bits(0xff, 8) == 0);
+  assert(fits_bits(~0xff, 8) == 0);
+  
 }
