@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <inttypes.h>
 
 // 2.57
 typedef unsigned char *byte_pointer;
@@ -221,6 +225,182 @@ int fits_bits(int x, int n) {
   return ((x << offset) >> offset) == x;
 }
 
+// 2.71
+
+/* extract byte from word. return as signed integer */
+typedef unsigned packed_t;
+
+int xbyte(packed_t word, int bytenum) {
+  int w = sizeof(packed_t);
+
+  int left =(w - bytenum - 1) << 3;
+  int right = (w - 1) << 3;
+
+  return ((int) word) << left >> right;
+}
+
+// 2.72
+void copy_int(int val, void *buf, int maxbytes) {
+  if (maxbytes >= (int) sizeof(val)) {
+    memcpy(buf, (void *) &val, sizeof(val));
+  }
+}
+
+// 2.73
+
+/* addition that saturates to TMin or TMax */
+int saturating_add(int x, int y) {
+  int sum = x + y;
+  int mask = INT_MIN;
+  /*
+   * if x > 0, y > 0 but sum < 0, it's a positive overflow
+   * if x < 0, y < 0 but sum >= 0, it's a negetive overflow
+   */
+
+  int pos_overflow = !(x & mask) && !(y & mask) && (sum & mask);
+  int neg_overflow = (x & mask) && (y & mask) && !(sum & mask);
+
+  ((pos_overflow && (sum = INT_MAX)) || (neg_overflow && (sum = INT_MIN)));
+
+  return sum;
+}
+
+// 2.74
+
+/* 
+ * determine whether arguments can be subtracted without overflow 
+ * this function should return 1 if the computation x-y does not overflow
+ */
+
+int tsub_ok(int x, int y) {
+  
+  int sub = x - y;
+  
+  int overflow = 0;
+  (y == INT_MIN && x == 0) && (overflow = 1);
+
+  /*
+   * if x > 0, y < 0 but sub < 0, it's a positive overflow
+   * if x < 0, y > 0 but sub >= 0, it's a negetive overflow
+   */
+
+  int pos_overflow = (x > 0) && (y < 0) && sub < 0;
+  int neg_overflow = (x < 0) && (y > 0) && sub >= 0;
+
+  return !(pos_overflow || neg_overflow || overflow);
+}
+
+// 2.75
+
+int signed_high_prod(int x, int y) {
+  int64_t mul = (int64_t) x * y;
+  return mul >> 32;
+}
+
+unsigned unsigned_high_prod(unsigned x, unsigned y) {
+   /*
+    *  ux: unsigned x
+    *  uy: unsigned y
+    *  x: signed x
+    *  y: signed y
+    *  m: w - 1 bit of x
+    *  n: w - 1 bit of y
+    *  ux = x + m*2^w
+    *  uy = y + n*2^w
+    *  a = m*2^w
+    *  b = n*2^w
+    *  ux * uy = (x + a) * (y + b) = x*y + x*b + y*a + a*b;
+    *  hi32: get high 32 bit
+    *  hi32(ux * uy) = hi32(x*y) + hi32(x*b) + hi32(y*a) + hi32(a*b)
+    *  hi32(x*y) is signed_high_prod(x, y);
+    *  hi32(x*b) = hi32(x*n*2^w) = x*n
+    *  hi32(y*a) = hi32(y*m*2^w) = y*m
+    *  hi32(a*b) = hi32(m*n*2^w*2w) = 0;
+    */ 
+
+    return signed_high_prod(x, y) + (int) x * (y >> 31) + (int) y * (x >> 31);
+}
+
+/* for test */
+unsigned another_unsigned_high_prod(unsigned x, unsigned y) {
+  uint64_t mul = (uint64_t) x * y;
+  return mul >> 32;
+}
+
+// 2.76
+
+/* rename to avoid conflict */
+void *another_calloc(size_t nmemb, size_t size) {
+  size_t buf_size = nmemb * size;
+  /* check overflow */
+  if (!size || buf_size / size == nmemb) {
+    if (buf_size == 0) {
+      return NULL;
+    }
+
+    void *ptr = malloc(buf_size);
+    if (!ptr) {
+      memset(ptr, 0, buf_size);
+    }
+    return ptr;
+  }
+
+  return NULL;
+}
+
+// 2.77
+
+/* k = 17 */
+int Amul(int x) {
+  return (x << 4) + x;
+}
+
+/* k = -7 */
+int Bmul(int x) {
+  return x - (x << 3);
+}
+
+/* k = 60 */
+int Cmul(int x) {
+  return (x << 6) - (x << 2);
+}
+
+/* k = -112 */
+int Dmul(int x) {
+  return (x << 4) - (x << 7);
+}
+
+// 2.78
+
+/* divide by power of 2. Assume 0 <= k < w-1 */
+int divide_power2(int x, int k) {
+  /* (x<0 ? x+(1<<k)-1 : x) >> k */
+
+  return ((x & INT_MIN) ? x + (1 << k) - 1 : x) >> k;
+}
+
+// 2.79
+
+int mul3div4(int x) {
+  /* mul 3 */
+  x = (x << 1) + x;
+  
+  /* div 4 */
+  return ((x & INT_MIN) ? x + (1 << 2) - 1 : x) >> 2;
+}
+
+// 2.80
+/* (3x)/4 */
+int threefourths(int x) {
+  /* 
+   * no overflow means divide 4 first, then multiple 3, 
+   * diffrent from 2.79 here
+   */
+  x = ((x & INT_MIN) ? x + (1 << 2) - 1 : x) >> 2;
+  x = (x << 1) + x;
+  return x;
+}
+
 int main() {
   // 2.57
   test_show_bytes(12345);
@@ -294,5 +474,97 @@ int main() {
   // 2.70
   assert(fits_bits(0xff, 8) == 0);
   assert(fits_bits(~0xff, 8) == 0);
+
+  // 2.71
+  assert(xbyte(0x00112233, 0) == 0x33);
+  assert(xbyte(0x00112233, 1) == 0x22);
+  assert(xbyte(0x00112233, 2) == 0x11);
+  assert(xbyte(0x00112233, 3) == 0x00);
+
+  assert(xbyte(0xAABBCCDD, 0) == 0xFFFFFFDD);
+  assert(xbyte(0xAABBCCDD, 1) == 0xFFFFFFCC);
+  assert(xbyte(0xAABBCCDD, 2) == 0xFFFFFFBB);
+  assert(xbyte(0xAABBCCDD, 3) == 0xFFFFFFAA);
+
+  // 2.72
+  int maxbytes = sizeof(int) * 10;
+  void* buf = malloc(maxbytes);
+  int val;
+
+  val = 0x12345678;
+  copy_int(val, buf, maxbytes);
+  assert(*(int*)buf == val);
+
+  val = 0xAABBCCDD;
+  copy_int(val, buf, 0);
+  assert(*(int*)buf != val);
+
+  free(buf);
+
+  // 2.73
+
+  assert(INT_MAX == saturating_add(INT_MAX, 0x1234));
+  assert(INT_MIN == saturating_add(INT_MIN, -0x1234));
+  assert(0x33 == saturating_add(0x11, 0x22));
+
+  // 2.74
+  assert(tsub_ok(-1, INT_MIN) == 1);
+  assert(tsub_ok(1, INT_MIN) == 0);
+  assert(tsub_ok(0, INT_MIN) == 0);
+  assert(tsub_ok(INT_MIN, INT_MIN) == 1);
+  assert(tsub_ok(0, 0) == 1);
+
+  // 2.75
+
+  unsigned x = 0x12345678;
+  unsigned y = 0xFFFFFFFF;
+  assert(another_unsigned_high_prod(x, y) == unsigned_high_prod(x, y));
+
+  // 2.76
+
+  void* p;
+  p = another_calloc(0x1234, 1);
+  assert(p != NULL);
+  free(p);
+
+  p = another_calloc(SIZE_MAX, 4096);
+  assert(p == NULL);
+  free(p);
+
+  // 2.77
+
+  x = 0x87654321;
+  assert(Amul(x) == 17 * x);
+  assert(Bmul(x) == -7 * x);
+  assert(Cmul(x) == 60 * x);
+  assert(Dmul(x) == -112 * x);
+
+  // 2.78
+  int m = 0xFFFFFFFF;
+  int n = 7;
+  assert(divide_power2(m, 1) == m / 2);
+  assert(divide_power2(n, 2) == n / 4);
+
+  // 2.79
+  
+  m = INT_MAX;
+  n = INT_MIN;
+  assert(mul3div4(m) == m * 3 / 4);
+  assert(mul3div4(n) == n * 3 / 4);
+  assert(mul3div4(-1) == -1 * 3 / 4);
+  assert(mul3div4(1) == 1 * 3 / 4);
+
+  // 2.80
+  assert(threefourths(8) == 6);
+  assert(threefourths(9) == 6);
+  assert(threefourths(10) == 7);
+  assert(threefourths(11) == 8);
+  assert(threefourths(12) == 9);
+
+  assert(threefourths(-8) == -6);
+  assert(threefourths(-9) == -6);
+  assert(threefourths(-10) == -7);
+  assert(threefourths(-11) == -8);
+  assert(threefourths(-12) == -9);
   
 }
