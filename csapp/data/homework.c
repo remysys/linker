@@ -396,9 +396,61 @@ int threefourths(int x) {
    * no overflow means divide 4 first, then multiple 3, 
    * diffrent from 2.79 here
    */
-  x = ((x & INT_MIN) ? x + (1 << 2) - 1 : x) >> 2;
-  x = (x << 1) + x;
-  return x;
+
+  
+  /* 
+   * f = x & ~0x3
+   * l = x & 0x3
+   * x = f + l
+   * 
+   * x = (x << 1) + x 
+   * equals:
+   * f = (f << l) + f    (1)
+   * l = (l << 1) + l
+   * 
+   * if x >= 0
+   * x >> 2 equals: 
+   * (f >> 2) + (l >> 2)
+   * 
+   * if x < 0
+   * equals:
+   * (x + bias) >> 2 equals:
+   * ((f + l) + bias) >> 2
+   * (f + (l + bias)) >> 2;
+   * (f >> 2) + (l + bias) >> 2 
+   * 
+   * (1) may overflow and f is a multiple of 4
+   * for f: divide 4 first, then multiple 3
+   * 
+   */
+   
+  int l = x & 0x3;
+  int f = x & ~0x3;
+
+  /* f divide 4 first, then multiple 3 */
+  f = f >> 2;   
+  f = (f << 1) + f;
+  
+  /* l multiple 3 first, then divide 4 */
+  l = (l << 1) + l;
+  int bias = (1 << 2) - 1;
+
+  l = ((x & INT_MIN) ? l + bias : l) >> 2;
+  
+  return f + l;
+}
+
+// 2.81 
+int genA(int k) {
+  /* (w-k) 1s followed by k 0s */
+  return -1 << k;
+}
+
+int genB(int k, int j) {
+  /* (w-k-j) 0s k 1s j 0s */
+  int w = sizeof(int) << 3;
+  
+  return ((unsigned int) -1 >> (w - k)) << j;
 }
 
 int main() {
@@ -555,16 +607,18 @@ int main() {
   assert(mul3div4(1) == 1 * 3 / 4);
 
   // 2.80
-  assert(threefourths(8) == 6);
-  assert(threefourths(9) == 6);
-  assert(threefourths(10) == 7);
-  assert(threefourths(11) == 8);
-  assert(threefourths(12) == 9);
+  assert(threefourths(8) == 6);   // 0x1000
+  assert(threefourths(9) == 6);   // 0x1001
+  assert(threefourths(10) == 7);  // 0x1010 
+  assert(threefourths(11) == 8);  // 0x1011
+
 
   assert(threefourths(-8) == -6);
   assert(threefourths(-9) == -6);
   assert(threefourths(-10) == -7);
-  assert(threefourths(-11) == -8);
-  assert(threefourths(-12) == -9);
-  
+  assert(threefourths(-11) == -8);  
+
+  // 2.81
+  assert(genA(8) == 0xFFFFFF00);
+  assert(genB(16, 8) == 0x00FFFF00);
 }
