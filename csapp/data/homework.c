@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <inttypes.h>
+#include <math.h>
 
 // 2.57
 typedef unsigned char *byte_pointer;
@@ -453,9 +454,206 @@ int genB(int k, int j) {
   return ((unsigned int) -1 >> (w - k)) << j;
 }
 
+// 2.84
+
+unsigned f2u(float x) {
+  return *(unsigned *)&x;
+}
+
+int float_le(float x, float y) {
+  unsigned ux = f2u(x);
+  unsigned uy = f2u(y);
+
+  unsigned sx = ux >> 31;
+  unsigned sy = uy >> 31;
+
+  /* 
+   * sx == sy: 
+   * sx == 0 => return ux <= uy
+   * sx != 0 => return ux >= uy
+   *  
+   * sx != sy:
+   * sx = 0 and sy = 1 => return sx > sy
+   * sx = 1 and sy = 0 => return sx > sy
+   */
+ 
+  return sx == sy ? (sx == 0 ? ux <= uy : ux >= uy) : sx > sy;
+}
+
+// 2.89
+/* (float) x == (float) dx : true */
+int fA(int x, double dx) {
+  return (float)x == (float)dx;
+}
+
+/* dx - dy == (double) (x-y) : false when y == INT_MIN */
+int fB(int x, double dx, int y, double dy) {
+  // printf("x: %d dx: %lf y: %d dy: %lf\n", x, dx, y, dy);
+  // printf("dx-dy: %lf (double)(x - y): %lf\n", dx - dy, (double)(x - y));
+  return dx - dy == (double)(x - y);
+}
+
+/* (dx + dy) + dz == dx + (dy + dz): false 
+ * floating-point addition is not associative
+ * FIXME I don't know what conditions cause false
+ */
+
+int fC(double dx, double dy, double dz) {
+  // printf("dx: %lf\n", dx);
+  // printf("(dx + dy) + dz: %lf \n dx + (dy + dz): %f\n", (dx + dy) + dz, dx + (dy + dz));
+  return (dx + dy) + dz == dx + (dy + dz);
+}
+
+/* (dx * dy) * dz == dx * (dy * dz): false 
+ * floating-point multiplication is not commutative
+ * FIXME I don't know what conditions cause false
+ */
+int fD(double dx, double dy, double dz) {
+  return (dx * dy) * dz == dx * (dy * dz);
+}
+
+/* dx / dx == dz / dz 
+ * wrong when dx != 0 and dz == 0 
+ */
+int fE(double dx, double dz) {
+  return dx / dx == dz / dz;
+}
+
+// 2.90
+
+float u2f(unsigned int x) {
+  return *(float *)&x;
+}
+
+/* 2^x */
+float fpwr2(int x) {
+  /* result exponent and fraction */
+  unsigned exp, frac;
+  unsigned u;
+  if (x < -149) { /* 2^-149 is smallest denormalized */
+    /* too small. return 0.0 */
+    exp = 0;
+    frac = 0;
+  } else if (x < -126) { /* (1 * 2^−126 smallest normalized */
+    /* 
+     * denormalized result 
+     * V = M * 2^E = 2^x
+     * frac = M = 2^(x - E)
+     * E = 1 - bias = -126;
+     * 0 00000000 0...1 == 2^-23
+     * frac = 1 << (x - E - (-23))
+     * frac = 1 << (x + 149);
+     */
+
+    exp = 0;
+    frac = 1 << (x + 149);
+  } else if (x < 128) {
+    /* normalized result. 
+     * V = M * 2^E = 2^x
+     * M = 1 = 1 + frac 
+     * => frac = 0
+     * E = x
+     * E = exp - bias = x
+     * exp = x + bias = x + (2^7 - 1) 
+     */
+
+    exp = x + 127;
+    frac = 0;
+  } else {
+    /* too big. Return +oo */
+    exp = 0xff;
+    frac = 0;
+  }
+
+  /* pack exp and frac into 32 bits */
+  u = exp << 23 | frac;
+  /* return as float */
+  return u2f(u);
+}
+
+// 2.91
+
+/* access bit-level representation floating-point number */
+typedef unsigned float_bits;
+
+/* compute -f. If f is NaN, then return f. */
+float_bits float_negate(float_bits f) {
+  unsigned int sign = f >> 31;
+  unsigned int exp = (f >> 23) & 0xff;
+  unsigned int frac = f & 0x7fffff;
+
+  if (exp == 0xff && frac != 0) {
+    // NaN
+    return f;
+  }
+
+  return ((~sign) << 31) | (exp << 23) | frac;
+}
+
+// 2.93
+
+/* compute |f|. If f is NaN, then return f. */
+float_bits float_absval(float_bits f) {
+  unsigned int sign = f >> 31;
+  unsigned int exp = (f >> 23) & 0xff;
+  unsigned int frac = f & 0x7fffff;
+
+
+  if (exp == 0xff && frac != 0) {
+    // NaN
+    return f;
+  }
+
+  return (0 << 31) | (exp << 23) | frac;
+
+}
+
+// 2.94 
+/* compute 2*f. If f is NaN, then return f. */
+float_bits float_twice(float_bits f) {
+  unsigned int sign = f >> 31;
+  unsigned int exp = (f >> 23) & 0xff;
+  unsigned int frac = f & 0x7fffff;
+
+
+  if (exp == 0xff) {
+    // infinity or NaN
+    return f;
+  }
+
+  if (exp == 0) {
+    /* denormalized */
+    frac <<= 1;
+  } else if (exp == 0xFE) {
+    // infinity
+    exp = 0xFF;
+    frac = 0;
+  } else {
+    /* normalized */
+    exp += 1;
+  }
+
+  return sign << 31 | exp << 23 | frac;
+}
+
+// 2.95
+/* compute 0.5*f. If f is NaN, then return f. */
+float_bits float_half(float_bits f) {
+  unsigned int sign = f >> 31;
+  unsigned int exp = (f >> 23) & 0xff;
+  unsigned int frac = f & 0x7fffff;
+
+  if (exp == 0xff) {
+    // infinity or NaN
+    return f;
+  }
+
+  
+}
+
 int main() {
   // 2.57
-  test_show_bytes(12345);
+  test_show_bytes(3);
 
   // 2.58
   printf("is_little_endian: %d\n", is_little_endian());
@@ -621,4 +819,66 @@ int main() {
   // 2.81
   assert(genA(8) == 0xFFFFFF00);
   assert(genB(16, 8) == 0x00FFFF00);
+
+  // 2.84
+  assert(float_le(-0, +0));
+  assert(float_le(+0, -0));
+  assert(float_le(0, 3));
+  assert(float_le(-4, -0));
+  assert(float_le(-4, 4));
+  assert(float_le(4, -4) == 0);
+
+  // 2.89
+  
+  int ix = INT_MAX;
+  double dx = (double) ix;
+  assert(fA(ix, dx));
+
+  ix = 0;
+  dx = (double) ix;
+  int iy = INT_MIN;
+  double dy = (double) iy;
+  assert(fB(ix, dx, iy, dy) == 0);
+
+
+  ix = 3;
+  iy = 1e9;
+  int iz = 1e9;
+
+  dx = (double) ix;
+  dy = (double) iy;
+  double dz = (double) iz;
+  
+  assert(fC(dx, dy, dz));
+  assert(fD(dx, dy, dz));
+  assert(fE(dx, dz));
+
+  // 2.90
+
+  assert(fpwr2(-10000) == powf(2,-10000));
+  assert(fpwr2(-149) == powf(2,-149));
+  assert(fpwr2(-130) == powf(2,-130));
+  assert(fpwr2(-126) == powf(2,-126));
+  assert(fpwr2(0) == powf(2,0));
+  assert(fpwr2(128) == powf(2,128));
+  assert(fpwr2(10000) == powf(2,10000));
+
+  //2.92
+ 
+  assert(u2f(float_negate(f2u(-1.0))) == 1.0);
+  assert(float_negate(0x89999999)==0x09999999);
+  assert(float_negate(0x7F900000)==0x7F900000);
+
+  // 2.93
+  assert(u2f(float_absval(f2u(-1.5))) == 1.5);
+  assert(float_absval(0x89)==0x89);
+  assert(float_absval(0x89999999)==0x09999999);
+  assert(float_absval(0x7F900000)==0x7F900000);
+
+  // 2.94
+  printf("%f\n", u2f(float_twice(f2u(0.013672))));
+  assert(u2f(float_twice(f2u(1.0))) == 2.0);
+  
+  // 2,95
+  
 }
