@@ -605,7 +605,6 @@ float_bits float_absval(float_bits f) {
   }
 
   return (0 << 31) | (exp << 23) | frac;
-
 }
 
 // 2.94 
@@ -655,8 +654,9 @@ float_bits float_half(float_bits f) {
    * 00 => 0 just >>1
    * 01 => 0 (round to even) just >>1
    * 10 => 1 just >>1
-   * 11 => 1 + 1 (round to even) plus 1 and just >>1 
+   * 11 => 1 + 1 (round to even) just >>1 and plus 1
    */
+
   int addition = (frac & 0x3) == 0x3;
 
   if (exp == 0) {
@@ -666,8 +666,8 @@ float_bits float_half(float_bits f) {
   } else if (exp == 1) {
     /* normalized to denormalized */
     exp = 0;
-    rest += addition; /* round */
     rest >>= 1;
+    rest += addition; /* round */   
     frac = rest & 0x7FFFFF;
   } else {
     exp -= 1;
@@ -717,9 +717,83 @@ int float_f2i(float_bits f) {
   return sign ? -v : v;
 }
 
+// 2.97
+
+/* 
+ * 0x3  -> 2 
+ * 0xf0 -> 8
+ */
+
+unsigned int bit_len(unsigned int i) {
+  unsigned int len = 0;
+  while (i >= (1 << len)) {
+    ++len;
+  }
+  return len;
+}
+
+/*
+ * 2 -> 000...0011
+ * 3 -> 000...0111
+ */
+ 
+int bit_mask(unsigned int len) {
+  if (len  % 32 == 0) return 0;
+  return ((unsigned int)(-1)) >> (32 - len);
+}
+
 /* compute (float) i */
 float_bits float_i2f(int i) {
+  unsigned int frac = 0;
+  unsigned int exp = 0;
+  unsigned int sign = 0;
+  int bias = 0x7f;
+
+  if (i == INT_MIN) { /* -2^31 */
+    sign = 1;
+    exp = bias + 31;
+    frac = 0; 
+    return sign << 31 | exp << 23 | frac;
+  }
+
+  if (i == 0) {
+    return sign << 31 | exp << 23 | frac;
+  }
+
+  if (i < 0) {
+    sign = 1;
+    i = -i;
+  }
+
+  unsigned int len = bit_len(i);
+  int fbitlen = len - 1;
+  exp = bias + fbitlen;
+  i = i & bit_mask(fbitlen);
   
+  if (fbitlen <= 23) {
+    frac = i << (23 - fbitlen);
+    return sign << 31 | exp << 23 | frac;
+  }
+
+  unsigned int shift = fbitlen - 23;
+  unsigned int left = i & bit_mask(shift);
+  frac = i >> shift;
+
+  int round_mid = 1 << (shift - 1);
+  int v = 0;
+  if (left < round_mid) {
+    /* do nothing */
+  } else if (left > round_mid) {
+    /* plus 1 */
+    v = 1;
+  } else { 
+    /* round to even*/
+    if (frac & 0x1) {
+      v = 1;
+    }
+  }
+
+  return (sign << 31 | exp << 23 | frac) + v;
 }
 
 int main() {
@@ -867,7 +941,6 @@ int main() {
   assert(divide_power2(n, 2) == n / 4);
 
   // 2.79
-  
   m = INT_MAX;
   n = INT_MIN;
   assert(mul3div4(m) == m * 3 / 4);
@@ -900,7 +973,6 @@ int main() {
   assert(float_le(4, -4) == 0);
 
   // 2.89
-  
   int ix = INT_MAX;
   double dx = (double) ix;
   assert(fA(ix, dx));
@@ -911,11 +983,9 @@ int main() {
   double dy = (double) iy;
   assert(fB(ix, dx, iy, dy) == 0);
 
-
   ix = 3;
   iy = 1e9;
   int iz = 1e9;
-
   dx = (double) ix;
   dy = (double) iy;
   double dz = (double) iz;
@@ -925,7 +995,6 @@ int main() {
   assert(fE(dx, dz));
 
   // 2.90
-
   assert(fpwr2(-10000) == powf(2,-10000));
   assert(fpwr2(-149) == powf(2,-149));
   assert(fpwr2(-130) == powf(2,-130));
@@ -935,7 +1004,6 @@ int main() {
   assert(fpwr2(10000) == powf(2,10000));
 
   //2.92
- 
   assert(u2f(float_negate(f2u(-1.0))) == 1.0);
   assert(float_negate(0x89999999)==0x09999999);
   assert(float_negate(0x7F900000)==0x7F900000);
@@ -961,4 +1029,15 @@ int main() {
   assert(float_f2i(f2u(0.5)) == 0);
   assert(float_f2i(f2u(1.5)) == 1);
   assert(float_f2i(f2u(1e100)) == 0x80000000);
+
+
+  //2.97
+
+  assert(u2f(float_i2f(1)) == 1.0);
+  assert(u2f(float_i2f(0)) == 0.0);
+  assert(u2f(float_i2f(INT_MAX)) == 2147483648.0); /* round */
+  assert(u2f(float_i2f(INT_MIN)) == 	-2147483648.0);
+  assert(u2f(float_i2f(10)) == 10.0);
+
+  return 0;
 }
