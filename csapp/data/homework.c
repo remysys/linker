@@ -640,6 +640,7 @@ float_bits float_twice(float_bits f) {
 /* compute 0.5*f. If f is NaN, then return f. */
 float_bits float_half(float_bits f) {
   unsigned int sign = f >> 31;
+  unsigned rest = f & 0x7FFFFFFF;
   unsigned int exp = (f >> 23) & 0xff;
   unsigned int frac = f & 0x7fffff;
 
@@ -648,6 +649,76 @@ float_bits float_half(float_bits f) {
     return f;
   }
 
+   /*
+   * round to even, we care about last 2 bits of frac
+   *
+   * 00 => 0 just >>1
+   * 01 => 0 (round to even) just >>1
+   * 10 => 1 just >>1
+   * 11 => 1 + 1 (round to even) plus 1 and just >>1 
+   */
+  int addition = (frac & 0x3) == 0x3;
+
+  if (exp == 0) {
+    /* denormalized */
+    frac += 1; /* round */
+    frac >>= 1;
+  } else if (exp == 1) {
+    /* normalized to denormalized */
+    exp = 0;
+    rest += addition; /* round */
+    rest >>= 1;
+    frac = rest & 0x7FFFFF;
+  } else {
+    exp -= 1;
+  }
+  
+  return sign << 31 | exp << 23 | frac;
+}
+
+// 2.96
+
+/*
+ * compute (int) f.
+ * if conversion causes overflow or f is NaN, return 0x80000000
+ */
+
+int float_f2i(float_bits f) {
+  unsigned int sign = f >> 31;
+  unsigned int exp = (f >> 23) & 0xff;
+  unsigned int frac = f & 0x7fffff;
+  unsigned int bias = 0x7f;
+
+  unsigned int E;
+  unsigned int M;
+  int v;
+  
+  if (exp < bias) {             /* 0 01111111 00...0 == 1*/
+    /* number less than 1 */
+    return 0;
+  } else if (exp >= 31 + bias) { /* exp - bias >= 31 */
+    /* number greater than INT_MAX 
+     * or f < 0 and (int)f == INT_MIN
+     */
+    return 0x80000000;
+  } else {
+    E = exp - bias;
+    M = 0x800000 | frac;  
+    
+    /* v = M * 2^(-23) * 2^E = M * 2^(E - 23) */
+
+    if (E >= 23) {
+      v = M << (E - 23);
+    } else {
+       /* whether sig is 1 or 0, round to zero */
+       v = M >> (23 - E);
+    }
+  }
+  return sign ? -v : v;
+}
+
+/* compute (float) i */
+float_bits float_i2f(int i) {
   
 }
 
@@ -876,9 +947,18 @@ int main() {
   assert(float_absval(0x7F900000)==0x7F900000);
 
   // 2.94
-  printf("%f\n", u2f(float_twice(f2u(0.013672))));
+  printf("float_twice: %f\n", u2f(float_twice(f2u(0.013672))));
   assert(u2f(float_twice(f2u(1.0))) == 2.0);
   
-  // 2,95
-  
+  // 2.95
+  printf("float_half: %f -> %f\n", 0.01, u2f(float_half(f2u(0.01))));
+  printf("float_half: %f -> %f\n", 1.5, u2f(float_half(f2u(1.5))));
+  assert(u2f(float_half(f2u(1.5))) == 0.75);
+
+  //2.96
+  assert(float_f2i(f2u(-1.5)) == -1);
+  assert(float_f2i(f2u(-0.5)) == 0);
+  assert(float_f2i(f2u(0.5)) == 0);
+  assert(float_f2i(f2u(1.5)) == 1);
+  assert(float_f2i(f2u(1e100)) == 0x80000000);
 }
