@@ -1,0 +1,14 @@
+/* 
+ * gcc -Og -S fact_while.c for jump to middle
+ * gcc -O1 -S fact_while.c for guarded do
+ */
+
+long fact_while(long n) {
+  long result = 1;
+
+  while (n > 1) {
+    result *= n;
+    n = n - 1;
+  }
+  return result;
+}
