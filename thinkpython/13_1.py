@@ -1,16 +1,21 @@
 import string
 
-def process_file(filename):
-  t = list()
-  fin = open(filename)
-  for line in fin:
-    line = line.replace('-', ' ')
-    for word in line.split():
-      word = word.strip(string.punctuation + string.whitespace + string.digits + '”' + '“').lower()
-      t.append(word)
+def process_line(line, hist):
+  line = line.replace('-', ' ')
+  strippables = string.punctuation + string.whitespace
+  for word in line.split():
+    word = word.strip(strippables).lower()
+    hist[word] = hist.get(word, 0) + 1
 
-  return t
+def process_file(filename):
+  hist = dict()
+  fp = open(filename)
+  for line in fp:
+    process_line(line, hist)
+  
+  return hist 
 
 if __name__ == '__main__':
-  print(process_file('emma.txt'))
+  hist = process_file('emma.txt')
+  print(hist)
 

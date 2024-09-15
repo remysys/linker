@@ -1,4 +1,6 @@
 import string
+import random
+import bisect
 
 def process_line(line, hist):
   line = line.replace('-', ' ')
@@ -46,10 +48,25 @@ def print_most_common(hist, num = 10):
   for freq, word in t[:num]:
     print(word, freq, sep = '\t')
 
-if __name__ == '__main__':
-  hist = process_file('emma.txt')
-  t = most_common(hist)
-  print_most_common(hist)
+def substract(d1, d2):
+  return set(d1) - set(d2)
 
+def random_word(hist):
+  words = []
+  freqs = []
+  total_freq = 0
+
+  for word, freq in hist.items():
+    total_freq += freq
+    words.append(word)
+    freqs.append(total_freq)
   
-  
+  x = random.randint(0, total_freq - 1)
+  index = bisect.bisect(freqs, x)
+  return words[index]
+
+if __name__ == '__main__':
+  hist = process_file('emma.txt') 
+  print("here are some random words from the book:")
+  for i in range(10):
+    print(random_word(hist))

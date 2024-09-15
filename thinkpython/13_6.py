@@ -46,10 +46,13 @@ def print_most_common(hist, num = 10):
   for freq, word in t[:num]:
     print(word, freq, sep = '\t')
 
+def substract(d1, d2):
+  return set(d1) - set(d2)
+
 if __name__ == '__main__':
   hist = process_file('emma.txt')
-  t = most_common(hist)
-  print_most_common(hist)
-
-  
-  
+  words = process_file('words.txt')
+  diff = substract(hist, words)
+  print('words in the book that aren\'t in the word list:')
+  for word in diff:
+    print(word)

@@ -1,31 +1,62 @@
 import string
 
-def make_word_dict(filename):
-  word_dict = {}
-  fin = open(filename)
-  for line in fin:
-    word = line.strip().lower()
-    word_dict[word] = None
+def process_line(line, hist):
+  line = line.replace('-', ' ')
+  strippables = string.punctuation + string.whitespace
+  for word in line.split():
+    word = word.strip(strippables).lower()
+    hist[word] = hist.get(word, 0) + 1
 
-  return word_dict
+def skip_header(fp):
+  for line in fp:
+    if line.startswith('*** START OF THIS'):
+      break
 
-def print_words(filename, word_dict):
-  hist = {}
-  fin = open(filename)
-  for line in fin:
-    line = line.replace('-', ' ')
-    for word in line.split():
-      word = word.strip(string.punctuation + string.whitespace + string.digits + '”' + '“').lower()
-      hist[word] = hist.get(word, 0) + 1
+def process_file(filename):
+  hist = dict()
+  fp = open(filename)
 
-  t = list()
-  for word in hist:
-    if word not in word_dict:
-      t.append((hist[word], word))
+  skip_header(fp)
+
+  for line in fp:
+    if line.startswith('*** END OF THIS'):
+      break
+    
+    process_line(line, hist)
   
-  t.sort()
-  print(t)
+  return hist 
+
+def total_words(hist):
+  return sum(hist.values())
+
+def different_words(hist):
+  return len(hist)
+
+def most_common(hist):
+  t = []
+  for key, value in hist.items():
+    t.append((value, key))
+  
+  t.sort(reverse = True)
+  return t
+
+def print_most_common(hist, num = 10):
+  t = most_common(hist)
+  print('the most common words are: ')
+  for freq, word in t[:num]:
+    print(word, freq, sep = '\t')
+
+def substract(d1, d2):
+  res = dict()
+  for key in d1:
+    if key not in d2:
+      res[key] = None
+  return res
 
 if __name__ == '__main__':
-  word_dict = make_word_dict('words.txt')
-  print_words('emma.txt', word_dict)
+  hist = process_file('emma.txt')
+  words = process_file('words.txt')
+  diff = substract(hist, words)
+  print('words in the book that aren\'t in the word list:')
+  for word in diff.keys():
+    print(word)
