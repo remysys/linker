@@ -704,7 +704,6 @@ print(s)
 
 # 86. consider a set of p matrices with shape (n,n) and a set of p vectors with shape (n,1). 
 # How to compute the sum of of the p matrix products at once? (result has shape (n,1))
-
 p = 10
 n = 5
 
@@ -731,17 +730,106 @@ print(z[np.argpartition(-z, n)[:n]])
 
 # 90. given an arbitrary number of vectors, 
 # build the cartesian product (every combinations of every item)
+arrays = np.array(np.arange(12)).reshape(3, 4)
+shape = [len(x) for x in arrays]
+grid = np.indices(shape)
+grid = grid.reshape(len(arrays), -1).T
 
-def cartesian(arrays):
-  arrays = [np.asarray(a) for a in arrays]
-  shape = (len(x) for x in arrays)
+for n, a in enumerate(arrays):
+  grid[:, n] = arrays[n][grid[:, n]]
 
-  ix = np.indices(shape, dtype=int)
-  ix = ix.reshape(len(arrays), -1).T
+print(grid)
 
-  for n, arr in enumerate(arrays):
-      ix[:, n] = arrays[n][ix[:, n]]
+# 91. how to create a record array from a regular array
 
-  return ix
+z = np.array([("Hello", 2.5, 3),
+              ("World", 3.6, 2)])
+r = np.core.records.fromarrays(z.T,
+                               names='col1, col2, col3',
+                               formats = 'S8, f8, i8')
 
-print (cartesian(([1, 2, 3], [4, 5], [6, 7])))
+# 92. consider a large vector Z, compute Z to the power of 3 using 3 different methods
+
+x = np.random.rand(int(5e7))
+
+np.power(x, 3)
+x*x*x
+np.einsum('i,i,i->i', x, x, x)
+
+# 93. consider two arrays A and B of shape (8,3) and (2,2). 
+# how to find rows of A that contain elements of each row of B regardless 
+# of the order of the elements in B?
+
+a = np.random.randint(0,3,(8,3))
+b = np.random.randint(0,2,(2,2))
+
+c = (a[..., np.newaxis, np.newaxis] == b)
+rows = np.where(c.any(1).all(1).all(1))[0]
+print(a)
+print(b)
+print(rows)
+
+# 94. considering a 10x3 matrix, extract rows with unequal values (e.g. [2,2,3])
+
+z = np.random.randint(0, 3, (10, 3))
+print(z)
+e = np.all(z[:, :-1] == z[:, 1:], axis=1)
+u = z[~e]
+print("unequal rows:\n", u)
+
+# 95. convert a vector of ints into a matrix binary representation
+v = np.arange(10)
+t = 2**np.arange(8)
+m = (v.reshape(-1, 1) & t != 0).astype(np.int32)
+z = m[:, ::-1]
+print(v)
+print(m)
+print(z)
+
+# 96. given a two dimensional array, how to extract unique rows
+
+z = np.random.randint(0, 2, (10, 3))
+print(z)
+u = np.unique(z, axis=0)
+print("unique rows:\n", u)
+
+# 97. considering 2 vectors A & B, write the einsum equivalent of inner, outer, 
+# sum, and mul function
+# make sure to read: http://ajcr.net/Basic-guide-to-einsum/
+
+a = np.random.randint(0, 1, 10)
+b = np.random.randint(0, 1, 10)
+
+np.einsum('i->', a)         # np.sum(a)
+np.einsum('i,i->i', a, b)   # a * b
+np.einsum('i,i', a, b)      # np.inner(a, b)
+np.einsum('i,j->ij', a, b)  # np.outer(a, b) 
+
+# 98. considering a path described by two vectors (X,Y), 
+# how to sample it using equidistant samples
+
+# 99. given an integer n and a 2D array X, select from X the rows 
+# which can be interpreted as draws from a multinomial distribution with n degrees, 
+# i.e., the rows which only contain integers and which sum to n
+
+x = np.random.randint(0, 2, (20, 3))
+n = 3
+
+is_int = np.all(x == x.astype(int), axis=1)
+is_sum_n = np.sum(x, axis=1) == n
+mask = np.logical_and(is_int, is_sum_n)
+z = x[mask]
+print(z)
+
+# 100. compute bootstrapped 95% confidence intervals for the mean of a 1D array X 
+# (i.e., resample the elements of an array with replacement N times, 
+# compute the mean of each sample, 
+# and then compute percentiles over the means).
+
+z = np.random.randint(0, 10, 100)
+print("z mean:", z.mean())
+n = 1000
+samples = np.random.randint(0, z.size, (n, z.size))
+means = z[samples].mean(axis=1)
+confint = np.percentile(means, [2.5, 97.5])
+print(confint)
