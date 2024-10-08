@@ -339,6 +339,121 @@ s.resample('4M').apply(lambda x : x.idxmax())
 # 
 s.resample('4MS').apply(lambda x : x.idxmax())
 
+"""
+It happens all the time: someone gives you data containing malformed strings, Python, 
+lists and missing data. How do you tidy it up so you can get on with the analysis?
+
+Take this monstrosity as the DataFrame to use in the following puzzles:
+
+df = pd.DataFrame({'From_To': ['LoNDon_paris', 'MAdrid_miLAN', 'londON_StockhOlm', 
+                               'Budapest_PaRis', 'Brussels_londOn'],
+              'FlightNumber': [10045, np.nan, 10065, np.nan, 10085],
+              'RecentDelays': [[23, 47], [], [24, 43, 87], [13], [67, 32]],
+                   'Airline': ['KLM(!)', '<Air France> (12)', '(British Airways. )', 
+                               '12. Air France', '"Swiss Air"']})
+Formatted, it looks like this:
+
+            From_To  FlightNumber  RecentDelays              Airline
+0      LoNDon_paris       10045.0      [23, 47]               KLM(!)
+1      MAdrid_miLAN           NaN            []    <Air France> (12)
+2  londON_StockhOlm       10065.0  [24, 43, 87]  (British Airways. )
+3    Budapest_PaRis           NaN          [13]       12. Air France
+4   Brussels_londOn       10085.0      [67, 32]          "Swiss Air"
+(It's some flight data I made up; it's not meant to be accurate in any way.)
+"""
+# 38. Some values in the the FlightNumber column are missing (they are NaN). 
+# These numbers are meant to increase by 10 with each row so 10055 and 10075 need to be put in place. 
+# Modify df to fill in these missing numbers and make the column an integer column (instead of a float column).
+
+df = pd.DataFrame({'From_To': ['LoNDon_paris', 'MAdrid_miLAN', 'londON_StockhOlm', 
+                               'Budapest_PaRis', 'Brussels_londOn'],
+              'FlightNumber': [10045, np.nan, 10065, np.nan, 10085],
+              'RecentDelays': [[23, 47], [], [24, 43, 87], [13], [67, 32]],
+                   'Airline': ['KLM(!)', '<Air France> (12)', '(British Airways. )', 
+                               '12. Air France', '"Swiss Air"']})
+df['FlightNumber'] = df['FlightNumber'].interpolate().astype(int)
+
+# 39. The From_To column would be better as two separate columns! 
+# Split each string on the underscore delimiter _ to give a new 
+# temporary DataFrame called 'temp' with the correct values. 
+# Assign the correct column names 'From' and 'To' to this temporary DataFrame.
+
+temp = df.From_To.str.split('_', expand=True)
+temp.columns = ['From', 'To']
+
+# 40. Notice how the capitalisation of the city names is all mixed up in this temporary DataFrame 'temp'. 
+# Standardise the strings so that only the first letter is uppercase (e.g. "londON" should become "London".)
+
+temp.From = temp.From.str.capitalize()
+temp.To = temp.To.str.capitalize()
+# or
+temp['From'] = temp['From'].str.capitalize()
+temp['To'] = temp['To'].str.capitalize()
+
+# 41. Delete the From_To column from 41. Delete the From_To column from df and 
+# attach the temporary DataFrame 'temp' from the previous questions.df 
+# and attach the temporary DataFrame from the previous questions.
+
+df = df.drop('From_To', axis = 1)
+df = df.join(temp)
+
+# 42. In the Airline column, you can see some extra puctuation and symbols 
+# have appeared around the airline names. Pull out just the airline name. 
+# E.g. '(British Airways. )' should become 'British Airways'
+
+df['Airline'] = df['Airline'].str.extract('([A-Za-z\s]+)', expand=False).str.strip()
+
+# 43. In the RecentDelays column, the values have been entered into the DataFrame as a list. 
+# We would like each first value in its own column, each second value in its own column, and so on. 
+# If there isn't an Nth value, the value should be NaN.
+# Expand the Series of lists into a new DataFrame named 'delays', 
+# rename the columns 'delay_1', 'delay_2', etc. and replace the unwanted RecentDelays column in df with 'delays'.
+
+delays = df['RecentDelays'].apply(pd.Series)
+
+delays.columns = ['delay_%d' % n for n in range(1, len(delays.columns) + 1)]
+df = df.join(delays)
+df = df.drop('RecentDelays', axis = 1)
+
+# 44. Given the lists letters = ['A', 'B', 'C'] and 
+# numbers = list(range(10)), construct a MultiIndex object from the product of the two lists. 
+# Use it to index a Series of random numbers. Call this Series s.
+
+letters = ['A', 'B', 'C']
+numbers = list(range(10))
+
+muli = pd.MultiIndex.from_product([letters, numbers])
+s = pd.Series(np.random.rand(30), index=muli)
+
+# 45. Check the index of s is lexicographically  sorted 
+# (this is a necessary proprty for indexing to work correctly with a MultiIndex).
+s.index.is_monotonic_increasing
+
+# 46. Select the labels 1, 3 and 6 from the second level of the MultiIndexed Series.
+
+s.loc[:, [1, 3, 6]]
+
+# 47. Slice the Series s; slice up to label 'B' for the first level 
+# and from label 5 onwards for the second level.
+s.loc[pd.IndexSlice[:'B', 5:]]
+# or
+s.loc[slice(None, 'B'), slice(5, None)]
 
 
+# 48. Sum the values in s for each label in the first level (you should have Series 
+# giving you a total for labels A, B and C).
+s.groupby(level=0).sum()
+# or
+s.sum()
 
+# 49. Suppose that sum() (and other methods) did not accept 
+# a level keyword argument. How else could you perform the equivalent of s.sum(level=1)?
+s.groupby(level=1).sum()
+s.unstack(level=0).sum(axis=1)
+
+# 50. Exchange the levels of the MultiIndex so we have an index of the form (letters, numbers). 
+# Is this new Series properly lexsorted? If not, sort it
+
+new_s = s.swaplevel(0, 1)
+if not new_s.index.is_monotonic_increasing:
+  new_s.sort_index()
